@@ -1,6 +1,0 @@
-select a.id
-from (
-    select LAG(temperature) over (order by id) as t, temperature, id
-    from Weather
-) a
-where a.t < a.temperature;

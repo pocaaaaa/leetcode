@@ -1,17 +1,24 @@
 -- 출처 : https://leetcode.com/problems/find-covid-recovery-patients/description
 
 select p.patient_id
-      , p.patient_name
-      , p.age
-      , a.negative_date - a.positive_date as recovery_time
+    , p.patient_name
+    , p.age
+    , c.negative_date - c.positive_date as recovery_time
 from (
-    select patient_id
-        , min(case when result = 'Positive' then test_date end) positive_date
-        , min(case when result = 'Negative' then test_date end) negative_date
-    from covid_tests
-    group by patient_id
-    having count(*) > 1
-) a, patients p
-where a.positive_date < a.negative_date
-and p.patient_id = a.patient_id
-order by recovery_time, p.patient_name
+    select c1.patient_id
+        , max(positive_date) as positive_date
+        , min(c1.test_date) as negative_date
+    from covid_tests c1, 
+        (
+            select patient_id, min(test_date) as positive_date
+            from covid_tests
+            where result = 'Positive'
+            group by patient_id
+        ) c2
+    where c2.patient_id = c1.patient_id
+    and c2.positive_date < c1.test_date
+    and c1.result = 'Negative'
+    group by c1.patient_id
+) c, patients p
+where p.patient_id = c.patient_id
+order by recovery_time, patient_name;
